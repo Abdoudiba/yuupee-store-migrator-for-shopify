@@ -7,7 +7,7 @@ Requires PHP: 7.4
 Requires Plugins: woocommerce
 WC requires at least: 8.0
 WC tested up to: 10.0
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -77,7 +77,16 @@ object that run created.
 No. Matching is by the Shopify source ID (then by SKU as a fallback), so a
 second run updates the existing product.
 
+== Screenshots ==
+
+1. Step 1 — Connect: upload the "Plain CSV" products export from your Shopify admin.
+2. Step 2 — Analyze: the background index pass reports product, variant and image counts, then the pre-flight dry run flags duplicate SKUs and unreachable images before anything is written. Warnings let the run proceed; blocking issues stop it.
+3. Step 4 — Report: every product row with a link to the created WooCommerce product, the full per-run log (downloadable as CSV), and a one-click rollback that deletes everything the run created.
+
 == Changelog ==
+
+= 1.0.2 =
+* Documentation only: added screenshots of the Connect, Analyze and Report steps to the WordPress.org listing. No code changes.
 
 = 1.0.1 =
 * Renamed to "Yuupee Store Migrator for Shopify" (slug: yuupee-store-migrator-for-shopify) per WordPress.org naming guidelines.
