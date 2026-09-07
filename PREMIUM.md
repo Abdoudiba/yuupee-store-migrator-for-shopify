@@ -5,7 +5,9 @@ Companion to `README.md` (which has the free-core architecture). Comments and
 generated docs in French per house style; this internal spec is in English to
 match `README.md`.
 
-**Status:** M5 — skeleton. Decisions locked 2026-09-06.
+**Status:** M5.1 ✅ (free-core hooks shipped in v1.1.0) · M5.2 ✅ (add-on
+skeleton + Lemon Squeezy license client). Next: M5.3 Shopify API client.
+Decisions locked 2026-09-06.
 
 ---
 
@@ -53,51 +55,48 @@ Text domain: `yuupee-store-migrator-shopify-premium` (its own `languages/`).
 
 ---
 
-## 3. Free-core changes required (ship first, as free plugin v1.1.0)
+## 3. Free-core changes
 
-The add-on cannot exist until the WP.org plugin exposes seams. All additive,
-all no-ops when the add-on is absent, all review-safe (no premium logic, no
-external calls).
+### 3a. Shipped in v1.1.0 (M5.1 ✅)
 
-1. **`STWM_Run`**
-   - already carries `source` (`'csv'`) and `entities` (`['product']`) — formalise:
-     `source` ∈ `{csv, api}`, `entities` is an ordered list.
-   - add `meta` blob for adapter state (API cursor, shop domain hash) — never the token.
+All additive, all no-ops when the add-on is absent, all review-safe (no premium
+logic, no external calls). In `includes/class-stwm-admin.php`:
 
-2. **`STWM_Admin` — filterable wizard**
-   - `steps()` → `apply_filters( 'stwm_wizard_steps', $steps )` so the add-on can
-     splice `choose` between `connect` and `analyze`.
-   - `render()` step dispatch → if no local `step_{slug}()` method, fire
-     `do_action( "stwm_wizard_render_step_{$slug}", $run )`.
-   - `step_connect()` → wrap the CSV form in
-     `do_action( 'stwm_connect_before_form', $run )` /
-     `apply_filters( 'stwm_connect_sources', [ 'csv' => … ] )`; when >1 source,
-     render a source picker.
-   - `handle_post()` → `do_action( "stwm_wizard_handle_{$step}", $step )` for
-     unknown steps, and `apply_filters( 'stwm_wizard_next_step', $next, $step, $run )`.
+- `steps()` → `apply_filters( 'stwm_wizard_steps', $steps )` (falls back to the
+  built-in list if a filter returns something empty/non-array). Splices in extra
+  steps; `current_step()` / `render_steps_nav()` / `handle_post()` all read
+  through `steps()` so filter-added slugs are already valid and numbered.
+- `render()` → for a step with no `step_{slug}()` method, fires
+  `do_action( "stwm_wizard_render_step_{$slug}", STWM_Run::current() )`.
+- `step_connect()` → `do_action( 'stwm_connect_before_form' )` and
+  `do_action( 'stwm_connect_after_form' )` around the CSV upload form.
+- `step_analyze()` → `do_action( 'stwm_after_preflight', $run )` right after the
+  core pre-flight list.
 
-3. **`STWM_Admin::render_preflight()`** → after the core list,
-   `do_action( 'stwm_after_preflight', $run )` so per-entity checks render inline.
+`STWM_Queue::handle_batch()` already ends with
+`do_action( 'stwm_process_batch_dispatch', $payload )` — unchanged, that is how
+the premium entity processors (collection/customer/order/coupon) get dispatched.
 
-4. **`STWM_Queue::handle_batch()`** already ends with
-   `do_action( 'stwm_process_batch_dispatch', $payload )` — keep. Add the same
-   dispatch for a `finalize` phase: `do_action( 'stwm_run_finalize', $run_id )`
-   after the last entity, for the add-on to write 301s / send reset mails.
+### 3b. Deferred to when the consuming code exists (M5.4 / M6+)
 
-5. **`STWM_Migration_Map`** — add `get_target( $entity_type, $source_id )` if not
-   already public (orders resolve products/customers through it); add
-   `source_ids_for_type( $run_id, $type )` for incremental.
+Add these to the free plugin in a later bump, once the add-on actually needs
+them — designing them now risks the wrong seam:
 
-6. **Upsell surface (free plugin)** — a "Premium" tab on the Shopify Import
-   screen: static feature list + a single outbound link to the sales page.
-   No tracking, no phone-home. WP.org allows one clearly-labelled upsell link.
-
-7. **`stwm_premium_active`** filter the add-on sets `true`; free core uses it
-   only to hide the upsell tab.
-
-Free plugin bumps to **1.1.0**, changelog "Adds integration hooks for the
-premium add-on; no behaviour change for the free importer." Re-run Plugin Check,
-`phpcs`, regenerate `.pot`, tag on SVN.
+- `apply_filters( 'stwm_connect_sources', [ 'csv' => … ] )` + a source picker
+  when >1 — needed by M5.4 ("API source" on Connect).
+- `do_action( "stwm_wizard_handle_{$step}" )` + `apply_filters( 'stwm_wizard_next_step', … )`
+  in `handle_post()` — only if a premium step needs to post *through* the
+  `stwm_wizard` form rather than its own `admin_post_` action.
+- `do_action( 'stwm_run_finalize', $run_id )` after the last entity — for 301s /
+  password-reset mails (M9).
+- `STWM_Migration_Map::get_target()` public + `source_ids_for_type()` — orders
+  (M7) and incremental (M10).
+- `STWM_Run`: formalise `source ∈ {csv, api}`, add a `meta` blob for adapter
+  state (API cursor, shop-domain hash — never the token).
+- "Premium" upsell tab on the Shopify Import screen (static feature list + one
+  outbound link to `test.yuupee.com/store-migrator-premium`, no phone-home),
+  hidden when `apply_filters( 'stwm_premium_active', false )` is true. Ship with
+  a later free bump so the tab and the product launch land together.
 
 ---
 
@@ -183,7 +182,7 @@ subscription with "license stays valid after cancel" = off renewals still allowe
   version-stamped, uploaded to LS as the downloadable + mirrored on our site
   for the updater's `update.json`.
 - `plugin-update-checker` (YahnisElsts, MIT) points at
-  `https://<yuupee-site>/sm-premium/update.json`; the JSON is regenerated on
+  `https://test.yuupee.com/sm-premium/update.json`; the JSON is regenerated on
   each release. License key passed as a query arg so we can 403 unlicensed
   update pulls (soft — the grace logic still applies client-side).
 - Semver. Free-core minimum version recorded in the add-on header
@@ -192,9 +191,10 @@ subscription with "license stays valid after cancel" = off renewals still allowe
 
 ## 8. Open items
 
-- Yuupee sales/landing page for the add-on (one page + LS buy button + docs
-  link). Blocked on: which domain / does it live on www.yuupee.com or a
-  subpath.
+- Sales/landing page for the add-on lives at **`https://test.yuupee.com/store-migrator-premium`**
+  (decided 2026-09-06) — one page + LS buy button + docs link. The updater's
+  `update.json` is served from `https://test.yuupee.com/sm-premium/update.json`.
+  Still to build the page itself and stand up the update endpoint.
 - Shopify API version pin: start `2024-10`, bump quarterly; the client sends a
   fixed version string so a Shopify deprecation can't silently change shapes.
 - Partner/development Shopify store for testing (free) — create under the Yuupee

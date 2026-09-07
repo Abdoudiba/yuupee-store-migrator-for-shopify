@@ -69,14 +69,28 @@ class STWM_Admin {
 
 	/**
 	 * Ordered wizard steps: slug => label.
+	 *
+	 * The `stwm_wizard_steps` filter lets an add-on splice in its own steps
+	 * (e.g. an "API source" or a "Premium" screen). A step slug with no
+	 * `step_{slug}()` method here is rendered through the
+	 * `stwm_wizard_render_step_{slug}` action — see render().
 	 */
 	private static function steps() {
-		return array(
+		$steps = array(
 			'connect' => __( 'Connect', 'yuupee-store-migrator-for-shopify' ),
 			'analyze' => __( 'Analyze', 'yuupee-store-migrator-for-shopify' ),
 			'run'     => __( 'Migrate', 'yuupee-store-migrator-for-shopify' ),
 			'report'  => __( 'Report', 'yuupee-store-migrator-for-shopify' ),
 		);
+
+		/**
+		 * Filtre la liste ordonnée des étapes de l'assistant (slug => libellé).
+		 *
+		 * @param array $steps
+		 */
+		$filtered = apply_filters( 'stwm_wizard_steps', $steps );
+
+		return is_array( $filtered ) && ! empty( $filtered ) ? $filtered : $steps;
 	}
 
 	public static function init() {
@@ -148,6 +162,14 @@ class STWM_Admin {
 		$method = 'step_' . $step;
 		if ( method_exists( __CLASS__, $method ) ) {
 			call_user_func( array( __CLASS__, $method ) );
+		} else {
+			/**
+			 * Rend le corps d'une étape d'assistant ajoutée via
+			 * `stwm_wizard_steps` (add-on premium).
+			 *
+			 * @param string|null $run_id Run courant, s'il existe.
+			 */
+			do_action( "stwm_wizard_render_step_{$step}", STWM_Run::current() );
 		}
 		echo '</div>';
 		echo '</div>';
@@ -183,6 +205,12 @@ class STWM_Admin {
 	/* --- Steps -------------------------------------------------------- */
 
 	private static function step_connect() {
+		/**
+		 * Avant le formulaire d'upload CSV — un add-on peut y injecter un choix
+		 * de source (ex. « connecter l'API Shopify » à la place du fichier).
+		 */
+		do_action( 'stwm_connect_before_form' );
+
 		self::form_open( 'connect', true );
 		echo '<h2>' . esc_html__( 'Upload your Shopify products CSV', 'yuupee-store-migrator-for-shopify' ) . '</h2>';
 		echo '<p>' . esc_html__( 'In your Shopify admin: Products → Export → "All products", format "Plain CSV file". Upload that file here.', 'yuupee-store-migrator-for-shopify' ) . '</p>';
@@ -195,6 +223,11 @@ class STWM_Admin {
 			)
 		) . '</p>';
 		self::form_close( __( 'Upload & analyze', 'yuupee-store-migrator-for-shopify' ) );
+
+		/**
+		 * Après le formulaire d'upload CSV.
+		 */
+		do_action( 'stwm_connect_after_form' );
 	}
 
 	private static function step_analyze() {
@@ -243,6 +276,14 @@ class STWM_Admin {
 		echo '</ul>';
 
 		$has_errors = self::render_preflight( $run );
+
+		/**
+		 * Après les contrôles pré-vol du noyau : un add-on peut afficher ici ses
+		 * propres vérifications par entité (collections, clients, commandes…).
+		 *
+		 * @param array $run
+		 */
+		do_action( 'stwm_after_preflight', $run );
 
 		$opts = isset( $run['options'] ) ? $run['options'] : array();
 

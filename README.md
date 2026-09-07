@@ -5,7 +5,7 @@ Inspired by Cart2Cart / LitExtension, but delivered the way our other plugins
 are: a fully-functional free core on WordPress.org, a paid premium add-on sold
 from our own site, and a done-for-you migration service run with the same tool.
 
-**Status:** milestone 4 — WP.org submission prep. CSV product import + dry-run pre-flight + own per-run log + crash-safe map writes, validated end to end on a live WooCommerce test site. `vendor/bin/phpcs` clean; Plugin Check clean after renaming away from the "WooCommerce" trademark entirely (see Notes for submission). Remaining before submit: assets (icon/banner/screenshots), drop `-dev` → `0.3.0`. API/premium tiers = M5+.
+**Status:** live on WordPress.org (v1.1.0, slug `yuupee-store-migrator-for-shopify`). Free CSV product import + dry-run pre-flight + own per-run log + crash-safe map writes + rollback, screenshots on the listing. `vendor/bin/phpcs` clean, Plugin Check clean. **v1.1.0 adds the wizard integration hooks** the premium add-on needs (M5.1 — see `PREMIUM.md`). Premium add-on repo: `../yuupee-store-migrator-shopify-premium/` (Lemon Squeezy licensing, sold off-WP.org). API/history import = M5.3+.
 
 The plugin's public identity is **Yuupee Store Migrator for Shopify** / slug `yuupee-store-migrator-for-shopify`. The internal code prefix stays `stwm` / `STWM` (unique, 4+ chars — all WP.org requires; matching it to the slug would churn 10 classes, 2 tables, and every option/hook for no review benefit).
 
@@ -96,7 +96,7 @@ orders only through the `WC_Order` CRUD API.
 2. **CSV product import** (free core): Shopify Products CSV → simple/variable products, variants, images, tags, type→category; batched, resumable, with rollback and a live report. ✅
 3. Dry-run pre-flight (dup SKUs, unreachable images, malformed rows), own per-run log table + CSV export, crash-safe map writes. ✅
 4. **WordPress.org submission prep**: WPCS pass (clean), `.pot`, readme polish, Plugin Check (clean), rename to `yuupee-store-migrator-for-shopify`. ✅ — remaining: icon/banner/screenshots, version `1.0.0`.
-5. Premium add-on skeleton + license check (reuse the ysqd approach — no Freemius cut).
+5. Premium add-on. **M5.1 ✅** wizard integration hooks in this plugin (v1.1.0). **M5.2 ✅** add-on skeleton + Lemon Squeezy license client (`../yuupee-store-migrator-shopify-premium/`). M5.3 = Shopify Admin API client + connection test. M5.4 = "API source" + "Choose data" wizard steps. Full plan: `PREMIUM.md`.
 6. Shopify Admin API client (REST first, respect the 2 req/s bucket) → products + collections.
 7. Customers + orders via API (status mapping: paid+fulfilled → completed, paid+unfulfilled → processing, …).
 8. Coupons, 301 redirects, blog posts + pages.

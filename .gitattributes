@@ -7,6 +7,7 @@
 /composer.json      export-ignore
 /composer.lock      export-ignore
 /README.md          export-ignore
+/PREMIUM.md         export-ignore
 /assets            export-ignore
 /tests             export-ignore
 /vendor            export-ignore
