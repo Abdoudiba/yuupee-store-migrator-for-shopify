@@ -76,6 +76,8 @@ class STWM_Admin {
 	 * `stwm_wizard_render_step_{slug}` action (see render()), its POST is
 	 * processed through the `stwm_wizard_handle_{slug}` action, and it can
 	 * redirect elsewhere via the `stwm_wizard_next_step` filter (see handle_post()).
+	 * `stwm_run_started` fires once the product batch is queued, for add-ons that
+	 * enqueue their own entity batches.
 	 */
 	private static function steps() {
 		$steps = array(
@@ -702,6 +704,17 @@ class STWM_Admin {
 							'batch_size'  => $batch,
 						)
 					);
+
+					/**
+					 * La migration vient de démarrer (les lots « product » sont
+					 * en file). Un add-on peut enfiler ici ses propres lots
+					 * d'entités (collections, clients, commandes…).
+					 *
+					 * @param string $run_id
+					 * @param array  $run
+					 */
+					do_action( 'stwm_run_started', $run_id, STWM_Run::get( $run_id ) );
+
 					self::maybe_spawn_cron();
 				}
 				break;
