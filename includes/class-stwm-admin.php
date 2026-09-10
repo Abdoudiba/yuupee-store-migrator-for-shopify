@@ -73,7 +73,9 @@ class STWM_Admin {
 	 * The `stwm_wizard_steps` filter lets an add-on splice in its own steps
 	 * (e.g. an "API source" or a "Premium" screen). A step slug with no
 	 * `step_{slug}()` method here is rendered through the
-	 * `stwm_wizard_render_step_{slug}` action — see render().
+	 * `stwm_wizard_render_step_{slug}` action (see render()), its POST is
+	 * processed through the `stwm_wizard_handle_{slug}` action, and it can
+	 * redirect elsewhere via the `stwm_wizard_next_step` filter (see handle_post()).
 	 */
 	private static function steps() {
 		$steps = array(
@@ -703,6 +705,31 @@ class STWM_Admin {
 					self::maybe_spawn_cron();
 				}
 				break;
+
+			default:
+				/**
+				 * Traite le POST d'une étape ajoutée par un add-on via
+				 * `stwm_wizard_steps` (le noyau n'a pas de `step_{slug}()` pour
+				 * elle). Le nonce `stwm_wizard_{slug}` a déjà été vérifié.
+				 *
+				 * @param string $run_id Run courant, ou '' s'il n'y en a pas.
+				 */
+				do_action( "stwm_wizard_handle_{$step}", STWM_Run::current() );
+				break;
+		}
+
+		/**
+		 * Laisse un add-on choisir l'étape suivante après traitement — par
+		 * exemple insérer une étape « Choisir les données » juste après Connect.
+		 * La valeur doit être un slug d'étape connu, sinon elle est ignorée.
+		 *
+		 * @param string $next   Étape suivante calculée par le noyau.
+		 * @param string $step   Étape qui vient d'être traitée.
+		 * @param string $run_id Run courant, ou ''.
+		 */
+		$next = (string) apply_filters( 'stwm_wizard_next_step', $next, $step, STWM_Run::current() );
+		if ( ! in_array( $next, $steps, true ) ) {
+			$next = 'report';
 		}
 
 		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE . '&step=' . $next ) );

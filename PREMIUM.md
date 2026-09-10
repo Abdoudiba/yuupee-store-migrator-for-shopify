@@ -8,9 +8,12 @@ match `README.md`.
 **Status:** M5.1 ✅ (free-core hooks shipped in v1.1.0) · M5.2 ✅ (add-on
 skeleton + Lemon Squeezy license client) · M5.3 ✅ (`STWMP_API` read-only
 Admin API client + connection test wired into the Premium screen +
-`STWMP_Preflight` counts/scopes/currency). Next: M5.4 wizard (API source on
-Connect + "Choose data" step + per-entity pre-flight rendering).
-Decisions locked 2026-09-06.
+`STWMP_Preflight` counts/scopes/currency) · M5.4 ✅ (`STWMP_Wizard`: additive
+"import also from the Admin API" panel on Connect, inserted "Choisir les
+données" step, per-entity pre-flight block on Analyze — proven end to end in
+WP Playground; free core carries the new `stwm_wizard_handle_*` +
+`stwm_wizard_next_step` seams, unreleased on `1.2.0-dev`). Next: M6 Collections
+importer. Decisions locked 2026-09-06.
 
 ---
 
@@ -49,7 +52,7 @@ Text domain: `yuupee-store-migrator-shopify-premium` (its own `languages/`).
 | `includes/class-stwmp-updater.php` | self-hosted update check (LS "Get latest version" / a small `update.json` on our site) — plugin-update-checker library (YahnisElsts), MIT |
 | `includes/class-stwmp-settings.php` | "Shopify Import → Premium" settings: license key field, Shopify store domain + Admin API token, connection test |
 | `includes/class-stwmp-api.php` | Shopify Admin API REST client: base URL from store domain, `X-Shopify-Access-Token`, 2 req/s leaky-bucket honouring `Retry-After` + the `X-Shopify-Shop-Api-Call-Limit` header, cursor pagination (`Link: rel="next"`), typed errors |
-| `includes/class-stwmp-wizard.php` | hooks the free wizard's seams: adds "API" as a source on Connect, injects a "Choose data" step, renders per-entity pre-flight |
+| `includes/class-stwmp-wizard.php` | hooks the free wizard's seams: an "import also from the Admin API" panel on Connect (additive to the CSV upload), an inserted "Choisir les données" step, and the per-entity pre-flight block on Analyze |
 | `includes/importers/class-stwmp-collections.php` | `collection` batch → product categories, nested, membership from `collects` / smart-rule expansion best-effort |
 | `includes/importers/class-stwmp-customers.php` | `customer` batch → WC customers + addresses; no password (send reset mail option) |
 | `includes/importers/class-stwmp-orders.php` | `order` batch → `WC_Order` via CRUD; line items resolved through the ID map; status mapping (§5); taxes, shipping lines, discount lines, notes |
@@ -80,16 +83,28 @@ logic, no external calls). In `includes/class-stwm-admin.php`:
 `do_action( 'stwm_process_batch_dispatch', $payload )` — unchanged, that is how
 the premium entity processors (collection/customer/order/coupon) get dispatched.
 
-### 3b. Deferred to when the consuming code exists (M5.4 / M6+)
+### 3b1. Added for M5.4 (in free core `1.2.0-dev`, not yet released)
 
-Add these to the free plugin in a later bump, once the add-on actually needs
-them — designing them now risks the wrong seam:
+In `includes/class-stwm-admin.php::handle_post()`, both additive and no-op
+without a listener:
 
-- `apply_filters( 'stwm_connect_sources', [ 'csv' => … ] )` + a source picker
-  when >1 — needed by M5.4 ("API source" on Connect).
-- `do_action( "stwm_wizard_handle_{$step}" )` + `apply_filters( 'stwm_wizard_next_step', … )`
-  in `handle_post()` — only if a premium step needs to post *through* the
-  `stwm_wizard` form rather than its own `admin_post_` action.
+- `do_action( "stwm_wizard_handle_{$step}", STWM_Run::current() )` in the
+  `switch`'s `default:` — processes the POST of a filter-added step (nonce
+  `stwm_wizard_{slug}` already checked by the core).
+- `apply_filters( 'stwm_wizard_next_step', $next, $step, $run_id )` after the
+  switch — lets an add-on redirect elsewhere (used to route Connect →
+  `choose-data` when an API import is pending). Unknown slugs fall back to
+  `report`.
+
+The add-on's `STWMP_Wizard` consumes these plus the existing `stwm_wizard_steps`
+/ `stwm_wizard_render_step_*` / `stwm_connect_after_form` / `stwm_after_preflight`.
+The **additive-panel** design (chosen over a source picker) means
+`stwm_connect_sources` was **not** needed. Ship `1.2.0` to WP.org before the
+premium add-on's public release (M8) — the add-on's `STWMP_MIN_CORE_VERSION` is
+`1.2.0-dev` during joint dev, bump to `1.2.0` at premium release.
+
+### 3b. Still deferred to when the consuming code exists (M6+)
+
 - `do_action( 'stwm_run_finalize', $run_id )` after the last entity — for 301s /
   password-reset mails (M9).
 - `STWM_Migration_Map::get_target()` public + `source_ids_for_type()` — orders
