@@ -6,7 +6,10 @@ generated docs in French per house style; this internal spec is in English to
 match `README.md`.
 
 **Status:** M5.1 ✅ (free-core hooks shipped in v1.1.0) · M5.2 ✅ (add-on
-skeleton + Lemon Squeezy license client). Next: M5.3 Shopify API client.
+skeleton + Lemon Squeezy license client) · M5.3 ✅ (`STWMP_API` read-only
+Admin API client + connection test wired into the Premium screen +
+`STWMP_Preflight` counts/scopes/currency). Next: M5.4 wizard (API source on
+Connect + "Choose data" step + per-entity pre-flight rendering).
 Decisions locked 2026-09-06.
 
 ---
@@ -164,8 +167,13 @@ subscription with "license stays valid after cancel" = off renewals still allowe
 - **M5.2** add-on skeleton: bootstrap + version guard + `STWMP_License` (LS
   client, settings field, activate/validate/deactivate, weekly cron, notices).
   Test against a real LS test-mode product + key.
-- **M5.3** `STWMP_API` client + connection test + `STWMP_Preflight` counts.
-  Test against a Shopify development store (free partner account).
+- **M5.3** ✅ `STWMP_API` client (read-only GET, ~2 req/s leaky bucket +
+  `Retry-After` + `X-Shopify-Shop-Api-Call-Limit`, cursor pagination via `Link`
+  `rel="next"`, typed `WP_Error`s) + connection test (`GET shop.json`, button on
+  the Premium screen) + `STWMP_Preflight` (per-resource counts, `access_scopes`
+  check with `write_*` satisfying `read_*`, Shopify↔WC currency mismatch,
+  gift-card/bundle + smart-collection warnings). Still to verify against a real
+  Shopify development store (free partner account).
 - **M5.4** wizard: API source on Connect + "Choose data" step + per-entity
   pre-flight rendering.
 - **M6** Collections importer (simplest graph) end-to-end.
