@@ -98,6 +98,7 @@ class STWM_Admin {
 		add_action( 'admin_post_stwm_wizard', array( __CLASS__, 'handle_post' ) );
 		add_action( 'admin_post_stwm_rollback', array( __CLASS__, 'handle_rollback' ) );
 		add_action( 'admin_post_stwm_log_csv', array( __CLASS__, 'handle_log_csv' ) );
+		add_action( 'admin_post_stwm_dismiss_review', array( __CLASS__, 'handle_dismiss_review' ) );
 	}
 
 	public static function menu() {
@@ -516,6 +517,10 @@ class STWM_Admin {
 			}
 		}
 
+		if ( 'done' === $status && $done > 0 && 0 === $errors ) {
+			self::render_review_prompt();
+		}
+
 		self::render_log_section( $run_id );
 
 		printf(
@@ -875,6 +880,44 @@ class STWM_Admin {
 			),
 			'success'
 		);
+		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE . '&step=report' ) );
+		exit;
+	}
+
+	/* --- Review prompt ---------------------------------------------------- */
+
+	/**
+	 * Une seule invitation discrète, uniquement sur la page du rapport après
+	 * une migration réussie, et masquable définitivement (règles WP.org :
+	 * pas de notice globale, pas de relance).
+	 */
+	private static function render_review_prompt() {
+		if ( get_user_meta( get_current_user_id(), 'stwm_review_dismissed', true ) ) {
+			return;
+		}
+		$dismiss_url = wp_nonce_url( admin_url( 'admin-post.php?action=stwm_dismiss_review' ), 'stwm_dismiss_review' );
+		echo '<div class="notice notice-info inline" style="margin:1em 0;padding:.75em 1em;">';
+		echo '<p><strong>' . esc_html__( 'Your migration finished without errors.', 'yuupee-store-migrator-for-shopify' ) . '</strong> ';
+		echo esc_html__( 'If this plugin saved you time, a short review on WordPress.org helps other store owners find it.', 'yuupee-store-migrator-for-shopify' ) . '</p>';
+		printf(
+			'<p><a class="button button-primary" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a> <a class="button-link" style="margin-left:1em;" href="%3$s">%4$s</a></p>',
+			esc_url( 'https://wordpress.org/support/plugin/yuupee-store-migrator-for-shopify/reviews/#new-post' ),
+			esc_html__( 'Leave a review', 'yuupee-store-migrator-for-shopify' ),
+			esc_url( $dismiss_url ),
+			esc_html__( "Don't show this again", 'yuupee-store-migrator-for-shopify' )
+		);
+		echo '</div>';
+	}
+
+	/**
+	 * Masque définitivement l'invitation pour l'utilisateur courant.
+	 */
+	public static function handle_dismiss_review() {
+		if ( ! current_user_can( self::CAP ) ) {
+			wp_die( esc_html__( 'You do not have permission to run migrations.', 'yuupee-store-migrator-for-shopify' ) );
+		}
+		check_admin_referer( 'stwm_dismiss_review' );
+		update_user_meta( get_current_user_id(), 'stwm_review_dismissed', 1 );
 		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE . '&step=report' ) );
 		exit;
 	}

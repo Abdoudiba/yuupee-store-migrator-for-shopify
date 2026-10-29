@@ -20,6 +20,7 @@ delete_option( 'stwm_runs' );
 delete_option( 'stwm_current_run' );
 delete_option( 'stwm_test_csv' );
 delete_option( 'stwm_test_last_run' );
+delete_metadata( 'user', 0, 'stwm_review_dismissed', '', true );
 
 // Uploaded CSVs and per-run index files under uploads/stwm/.
 $stwm_uploads = wp_upload_dir();
