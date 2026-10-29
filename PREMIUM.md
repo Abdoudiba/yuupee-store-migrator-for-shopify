@@ -13,9 +13,13 @@ Admin API client + connection test wired into the Premium screen +
 données" step, per-entity pre-flight block on Analyze) · M6 ✅ (`STWMP_Importers`
 orchestration + `STWMP_Collections`: custom + smart collections → `product_cat`
 terms, membership resolved by handle through the product ID map, idempotent —
-proven end to end in WP Playground with a mocked Admin API). Free core on
+proven end to end in WP Playground with a mocked Admin API). M7a ✅ (`STWMP_Customers`: one Shopify page per Action Scheduler job via the new
+`STWMP_API::page()`, idempotent, existing accounts linked + only empty fields
+filled, staff accounts linked but never modified, Shopify signup date kept, no
+emails sent; `STWMP_Importers` gained `dependencies()` + `entity_finished()` so
+orders start after customers). Free core on
 `1.2.0-dev` (seams `stwm_wizard_handle_*`, `stwm_wizard_next_step`,
-`stwm_run_started`), **unreleased**. Next: M7 Customers + Orders. Decisions
+`stwm_run_started`), **unreleased**. Next: M7b Orders. Decisions
 locked 2026-09-06.
 
 ---
@@ -218,8 +222,18 @@ subscription with "license stays valid after cancel" = off renewals still allowe
   same-slug term, no duplicates). Recorded in `STWM_Migration_Map` as
   `entity_type = category`. Playground-verified with a mocked Admin API
   (`m6/` harness). Rollback of these terms waits on a free-core hook (M9).
-- **M7** Customers, then Orders (the hard one — status map, money, line-item
-  ID-map resolution, refunds).
+- **M7a** ✅ Customers (Playground-verified with a mocked 2-page `customers.json`:
+  create / link-existing / staff-untouched / no-email skipped / FR address / re-run
+  = updates, no duplicates). Rollback must select users by the
+  `_stwmp_created_run` user meta, NOT by map rows (a re-run moves map rows to the
+  newer run_id).
+- **M7b** Orders (the hard one — status map, money, line-item ID-map
+  resolution, refunds).
+- **Free-core gap found 2026-10-28:** `handle_rollback()` deletes ALL map rows
+  for the run but only deletes products/variations/images → premium categories,
+  customers and orders would be orphaned. Add `do_action( 'stwm_rollback_run',
+  $run_id, $rows )` before `STWM_Migration_Map::delete_run()` in 1.2.0, and an
+  `STWMP_Rollback` listener in the add-on. Must ship before premium v1.0.
 - **M8** Coupons. → **Premium v1.0 release** (LS live, sales page, changelog).
 - **M9 / v1.1** 301 redirects (+ a Redirection-plugin export and an `.htaccess`
   / nginx snippet), blog posts + pages.
