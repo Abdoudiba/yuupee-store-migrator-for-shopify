@@ -7,7 +7,7 @@ Requires PHP: 7.4
 Requires Plugins: woocommerce
 WC requires at least: 8.0
 WC tested up to: 10.0
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -84,6 +84,9 @@ second run updates the existing product.
 3. Step 4 — Report: every product row with a link to the created WooCommerce product, the full per-run log (downloadable as CSV), and a one-click rollback that deletes everything the run created.
 
 == Changelog ==
+
+= 1.1.1 =
+* After a migration completes with no errors, the report page shows a one-time, dismissible invitation to leave a review. Nothing is shown anywhere else in the admin.
 
 = 1.1.0 =
 * Adds integration hooks so a separately-sold premium add-on can extend the migration wizard (`stwm_wizard_steps`, `stwm_wizard_render_step_{slug}`, `stwm_connect_before_form` / `stwm_connect_after_form`, `stwm_after_preflight`). No change to the free CSV importer's behaviour.
