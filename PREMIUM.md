@@ -327,7 +327,9 @@ built by `bin/build.sh` from a clean tree). Blocked on Lemon Squeezy activation.
 2. Copy product 1485829 to **live mode** (new product/variant IDs + checkout
    link) → update `STWMP_LS_PRODUCT_ID` (store 510726 stays) → rebuild zip.
 3. Upload the zip to each of the 3 live variants (Files). Browser upload =
-   base64 DataTransfer recipe (openclaw playbook).
+   base64 DataTransfer recipe (openclaw playbook) — validé le 2026-10-30 sur
+   les 3 variantes TEST (zip 1.0.0 à l'ID produit test : si la copie en live
+   reprend ces fichiers, les REMPLACER par le zip reconstruit).
 4. Polish the LS product page (screenshots from Playground `shots/`).
 5. Publish free **1.2.0** to WP.org (SVN trunk + tags/1.2.0, git tag v1.2.0) —
    the wizard's "Premium" tab links to `https://yuupee.lemonsqueezy.com/`.
