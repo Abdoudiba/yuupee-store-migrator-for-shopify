@@ -7,7 +7,7 @@ Requires PHP: 7.4
 Requires Plugins: woocommerce
 WC requires at least: 8.0
 WC tested up to: 10.0
-Stable tag: 1.1.1
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -23,8 +23,7 @@ products.
 Every object it creates is recorded in an internal ID map, so:
 
 * re-running an import **updates** products instead of duplicating them;
-* a one-click **rollback** removes everything a run created;
-* a later premium tier can do **incremental** re-runs (only new orders, etc.).
+* a one-click **rollback** removes everything a run created.
 
 Large catalogues are processed in the background with Action Scheduler (the
 same queue WooCommerce itself uses), so a 20,000-product store migrates
@@ -36,13 +35,21 @@ without a long-running request and picks up where it left off if interrupted.
 * Product images by URL, product type as category, tags.
 * Background batching, ID map, dry-run, rollback, per-row log.
 
-= Premium (sold separately) =
+= Premium add-on (sold separately) =
 
-* Live **Shopify Admin API** connection — no CSV juggling.
-* Collections to product categories, customers and addresses, full orders,
-  discount codes to coupons, blog posts and pages.
-* **301 redirect** generation for the old Shopify URLs.
-* **Incremental** re-runs.
+Works from the standard CSV exports in your Shopify admin, on every Shopify plan:
+
+* **Customers** with addresses, tags, notes and marketing consent; existing
+  WordPress accounts are linked, never overwritten.
+* Your full **order history**: statuses, taxes, shipping, discounts and refunds
+  copied exactly as charged, line items linked to the imported products, no
+  emails sent and no stock changes.
+* **Discount codes** as WooCommerce coupons.
+* **Collections** as product categories, for stores that still have a Shopify
+  custom app.
+* Same background batches, safe re-runs and one-click rollback as the free plugin.
+
+The free plugin is fully usable on its own; the add-on is optional.
 
 = Known limits =
 
@@ -56,16 +63,16 @@ without a long-running request and picks up where it left off if interrupted.
 
 1. Install and activate WooCommerce.
 2. Upload this plugin to `/wp-content/plugins/` or via Plugins → Add New → Upload, and activate.
-3. In your Shopify admin, export Products (and, with premium, connect the Admin API).
+3. In your Shopify admin, export Products (Products → Export → "All products", "Plain CSV file").
 4. Go to WooCommerce → Shopify Import and follow the wizard.
 
 == Frequently Asked Questions ==
 
 = Do I need a paid Shopify plan? =
 
-No. The free tier works entirely from the CSV files Shopify lets every plan
-export. The premium Admin API connection needs a custom app in your Shopify
-admin, which any plan can create.
+No. The free plugin works entirely from the CSV files Shopify lets every plan
+export, and so does the Premium add-on (customers, orders and discounts
+exports).
 
 = Can I undo an import? =
 
@@ -84,6 +91,11 @@ second run updates the existing product.
 3. Step 4 — Report: every product row with a link to the created WooCommerce product, the full per-run log (downloadable as CSV), and a one-click rollback that deletes everything the run created.
 
 == Changelog ==
+
+= 1.2.0 =
+* New "Premium" tab in the wizard describing the optional add-on (shown only when the add-on is not installed; a plain link, no tracking, no network calls).
+* Integration hooks for add-ons: postable add-on steps (`stwm_wizard_handle_{slug}`, `stwm_wizard_next_step`), `stwm_run_started`, and rollback hooks (`stwm_rollback_run`, `stwm_rollback_message`) so an add-on's imported data is removed by the same one-click rollback.
+* No change to the free CSV importer's behaviour.
 
 = 1.1.1 =
 * After a migration completes with no errors, the report page shows a one-time, dismissible invitation to leave a review. Nothing is shown anywhere else in the admin.

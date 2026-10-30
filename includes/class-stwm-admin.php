@@ -16,6 +16,9 @@ class STWM_Admin {
 	const PAGE = 'stwm';
 	const CAP  = 'manage_woocommerce';
 
+	/** Page de vente de l'add-on premium (onglet « Premium »). */
+	const PREMIUM_URL = 'https://test.yuupee.com/store-migrator-premium';
+
 	/**
 	 * Run id the upload_dir filter should target while wp_handle_upload() runs.
 	 *
@@ -86,6 +89,16 @@ class STWM_Admin {
 			'run'     => __( 'Migrate', 'yuupee-store-migrator-for-shopify' ),
 			'report'  => __( 'Report', 'yuupee-store-migrator-for-shopify' ),
 		);
+
+		/**
+		 * L'add-on premium renvoie true : l'onglet de présentation « Premium »
+		 * disparaît (l'add-on ajoute alors ses propres écrans).
+		 *
+		 * @param bool $active
+		 */
+		if ( ! apply_filters( 'stwm_premium_active', false ) ) {
+			$steps['upgrade'] = __( 'Premium', 'yuupee-store-migrator-for-shopify' );
+		}
 
 		/**
 		 * Filtre la liste ordonnée des étapes de l'assistant (slug => libellé).
@@ -445,6 +458,40 @@ class STWM_Admin {
 			)
 		);
 		self::form_close( __( 'Start migration', 'yuupee-store-migrator-for-shopify' ) );
+	}
+
+	/**
+	 * Onglet de présentation de l'add-on premium (vendu à part, hors WordPress.org).
+	 * Affiché uniquement quand l'add-on n'est pas actif ; aucun appel réseau,
+	 * aucun suivi — un simple lien vers la page de vente.
+	 */
+	private static function step_upgrade() {
+		$url = add_query_arg(
+			array(
+				'utm_source' => 'plugin',
+				'utm_medium' => 'wizard',
+			),
+			self::PREMIUM_URL
+		);
+		echo '<h2>' . esc_html__( 'Bring over your customers, orders and discount codes', 'yuupee-store-migrator-for-shopify' ) . '</h2>';
+		echo '<p>' . esc_html__( 'The free plugin moves your catalogue. The Premium add-on moves the rest of your store, from the standard CSV exports in your Shopify admin — every Shopify plan, no app to install.', 'yuupee-store-migrator-for-shopify' ) . '</p>';
+		echo '<ul style="list-style:disc;margin-left:1.5em;">';
+		foreach ( array(
+			__( 'Customers with their addresses, tags, notes and marketing consent. Existing WordPress accounts are linked, never overwritten.', 'yuupee-store-migrator-for-shopify' ),
+			__( 'Your full order history: statuses, taxes, shipping, discounts and refunds copied exactly as charged, items linked to the imported products. No emails to customers, no stock changes.', 'yuupee-store-migrator-for-shopify' ),
+			__( 'Discount codes as WooCommerce coupons, with their limits and end dates.', 'yuupee-store-migrator-for-shopify' ),
+			__( 'Collections as product categories, for stores that still have a Shopify custom app.', 'yuupee-store-migrator-for-shopify' ),
+			__( 'The same safety as the free plugin: background batches, safe re-runs and a one-click rollback.', 'yuupee-store-migrator-for-shopify' ),
+		) as $line ) {
+			echo '<li>' . esc_html( $line ) . '</li>';
+		}
+		echo '</ul>';
+		echo '<p><strong>' . esc_html__( 'From $79 for one site — one-time payment, the license never expires, 1 year of updates and support.', 'yuupee-store-migrator-for-shopify' ) . '</strong></p>';
+		printf(
+			'<p><a class="button button-primary" href="%1$s" target="_blank" rel="noopener noreferrer">%2$s</a></p>',
+			esc_url( $url ),
+			esc_html__( 'See Premium', 'yuupee-store-migrator-for-shopify' )
+		);
 	}
 
 	private static function step_report() {
