@@ -168,6 +168,66 @@ subscription with "license stays valid after cancel" = off renewals still allowe
 
 ---
 
+## 4b. Data source pivot — Shopify CSV exports first (decided 2026-10-30)
+
+Found while setting up the real dev store (`yuupee-migrator-test.myshopify.com`):
+
+1. **Since 2026-01-01 merchants can no longer create legacy custom apps**
+   (Settings → Apps → Develop apps). Our "paste an Admin API token" onboarding is
+   dead for real buyers. Replacements: Dev Dashboard app + client-credentials
+   grant (only when app and store are in the *same* organization; 24 h tokens) or
+   a real OAuth app (needs our hosted broker + protected-customer-data review for
+   Level 2 fields; custom distribution is limited to one Plus organization).
+2. **Basic plan redacts customer PII** (email/name/phone) for admin-created custom
+   apps → the API customers importer skipped everyone (email required).
+3. The admin CSV exports have neither problem: full PII on every plan, **full
+   order history** (no 60-day `read_all_orders` gate), no app, no server.
+
+**Decision:** Premium v1.0 imports **customers, orders and discount codes from the
+admin CSV exports**, uploaded in the wizard next to the free plugin's products
+CSV. The Admin API path stays as an optional source for merchants who still have
+a legacy custom app (and for collections, which no CSV export contains). A real
+OAuth app is a v1.1+ option only if sales justify the broker + review.
+
+Real fixtures (exported 2026-10-30, Basic plan): `tests/fixtures/` in the add-on.
+
+### CSV formats observed
+
+- **All files:** UTF-8 (strip BOM). IDs and phones are prefixed with `'`
+  (Excel guard): `'31321516179565`, `'+14165550135` → strip a leading `'`.
+  Dates: `2026-10-30 01:22:49 -0400`.
+- **customers_export.csv** (21 cols): `Customer ID, First Name, Last Name, Email,
+  Accepts Email Marketing (yes/no), Default Address Company/Address1/Address2/City/
+  Province Code/Country Code/Zip/Phone, Phone, Accepts SMS Marketing, Total Spent,
+  Total Orders, Note, Tax Exempt, Tags ("a, b"), Accepts WhatsApp Marketing`.
+  No created_at. Accept the older header set too (`Company, Address1, …,
+  Province Code, Country Code`) via header aliases.
+- **orders_export_N.csv** (79 cols, one row **per line item**): order-level
+  fields (`Financial Status, Fulfillment Status, Subtotal, Shipping, Taxes, Total,
+  Discount Code, Discount Amount, Refunded Amount, Billing *, Shipping *, Notes,
+  Cancelled at, Payment Method, Tags, Id, Tax 1..5 Name/Value, Currency,
+  Shipping Method, Paid at, Created at`) are only filled on the **first row** of
+  each order; following rows carry `Name` + `Lineitem *` (quantity, name, price,
+  sku, discount, fulfillment status). Group by `Name` (stable) / `Id`.
+  Line → product: match `Lineitem sku` against imported variations/products (ID
+  map → SKU fallback); no SKU (custom line, e.g. "Emballage cadeau") → unlinked
+  line item. Exports > a few MB are split into `orders_export_1.csv`, `_2`, … —
+  accept several files.
+  Refunds: only `Refunded Amount` (no per-line detail) → one WC refund of that
+  amount, no restock, note "Imported from Shopify".
+  Payment status nuance: API-created "paid" orders without a transaction show
+  `Outstanding Balance` = total; trust `Financial Status`, not the balance.
+- **discounts_export_N.csv** (17 cols): `Name, Value (-10.0), Value Type
+  (percentage|fixed_amount), Type (Amount Off|Free Shipping|Buy X Get Y),
+  Discount Class (order|product|shipping), Minimum Purchase Requirements (amount
+  "30.0" OR quantity "3" — ambiguous: decimal point = amount), Combines with …,
+  Customer Selection, Context, Times Used In Total, Applies Once Per Customer,
+  Usage Limit Per Code, Status (Active|Scheduled|Expired), Start, End`.
+  Automatic discounts are mixed in with codes (their `Name` is a sentence) —
+  only import Amount Off / Free Shipping; skip Buy X Get Y with a report line.
+
+---
+
 ## 5. Shopify order status → WooCommerce
 
 | Shopify `financial_status` | Shopify `fulfillment_status` | WooCommerce status |
