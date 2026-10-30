@@ -905,21 +905,35 @@ class STWM_Admin {
 		}
 
 		STWM_Log::info( $run_id, sprintf( 'Rolled back: %d products and %d images deleted.', $deleted_p, $deleted_i ) );
+
+		/**
+		 * Un add-on supprime ici ce qu'il a créé pour ce run (catégories,
+		 * clients, commandes, coupons…), avant l'effacement des lignes de carte.
+		 *
+		 * @param string $run_id
+		 * @param array  $rows   Lignes de carte du run (objets).
+		 */
+		do_action( 'stwm_rollback_run', $run_id, $rows );
+
 		STWM_Migration_Map::delete_run( $run_id );
 		STWM_Run::update( $run_id, array( 'status' => 'rolled_back' ) );
 
 		$dir = stwm_run_upload_dir( $run_id );
 		stwm_rrmdir( $dir['path'] );
 
-		self::set_notice(
-			sprintf(
-				/* translators: 1: products deleted, 2: images deleted */
-				__( 'Rolled back: %1$s products and %2$s images deleted.', 'yuupee-store-migrator-for-shopify' ),
-				number_format_i18n( $deleted_p ),
-				number_format_i18n( $deleted_i )
-			),
-			'success'
+		$message = sprintf(
+			/* translators: 1: products deleted, 2: images deleted */
+			__( 'Rolled back: %1$s products and %2$s images deleted.', 'yuupee-store-migrator-for-shopify' ),
+			number_format_i18n( $deleted_p ),
+			number_format_i18n( $deleted_i )
 		);
+		/**
+		 * Message affiché après un rollback ; un add-on peut y ajouter son bilan.
+		 *
+		 * @param string $message
+		 * @param string $run_id
+		 */
+		self::set_notice( (string) apply_filters( 'stwm_rollback_message', $message, $run_id ), 'success' );
 		wp_safe_redirect( admin_url( 'admin.php?page=' . self::PAGE . '&step=report' ) );
 		exit;
 	}
