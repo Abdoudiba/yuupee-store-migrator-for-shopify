@@ -305,7 +305,11 @@ Real fixtures (exported 2026-10-30, Basic plan): `tests/fixtures/` in the add-on
   customers and orders would be orphaned. Add `do_action( 'stwm_rollback_run',
   $run_id, $rows )` before `STWM_Migration_Map::delete_run()` in 1.2.0, and an
   `STWMP_Rollback` listener in the add-on. Must ship before premium v1.0.
-- **M8** Coupons. → **Premium v1.0 release** (LS live, sales page, changelog).
+- **M8** ✅ (2026-10-30) Coupons from `discounts_export_N.csv` (`STWMP_Coupons`):
+  Amount Off + Free Shipping; BXGY and automatic (code-less) discounts skipped
+  and logged; scheduled/expired → draft; merchant's existing codes linked and
+  never rewritten. Verified in Playground with the real export.
+- → **Premium v1.0 release** (LS live, sales page, changelog).
 - **M9 / v1.1** 301 redirects (+ a Redirection-plugin export and an `.htaccess`
   / nginx snippet), blog posts + pages.
 - **M10 / v1.2** incremental mode.
