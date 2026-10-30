@@ -291,8 +291,7 @@ Real fixtures (exported 2026-10-30, Basic plan): `tests/fixtures/` in the add-on
   `customers_export.csv` + wizard step « Données premium » (3 uploads, API boxes
   only if a token is configured, bad file refused in place, CSV counts on
   Analyze). Playground-verified through the real UI with the real exports.
-  To do before v1.0: daily cron deleting `stwmp-*.csv` older than 7 days
-  (abandoned runs keep PII files otherwise); **add-on strings are French
+  To do before v1.0: ~~daily CSV purge~~ (done); **add-on strings are French
   source — switch to English source + fr_FR .po** (buyers are mostly English).
 - **M7b** ✅ (2026-10-30) Orders from `orders_export_N.csv` (`STWMP_Orders`):
   verbatim money, SKU line matching (free line otherwise), §5 statuses, refund
@@ -305,6 +304,9 @@ Real fixtures (exported 2026-10-30, Basic plan): `tests/fixtures/` in the add-on
   customers and orders would be orphaned. Add `do_action( 'stwm_rollback_run',
   $run_id, $rows )` before `STWM_Migration_Map::delete_run()` in 1.2.0, and an
   `STWMP_Rollback` listener in the add-on. Must ship before premium v1.0.
+  ✅ DONE 2026-10-30: core `stwm_rollback_run` + `stwm_rollback_message`;
+  add-on `STWMP_Cleanup` (deletes by `_stwmp_created_run`, linked items never
+  touched) + daily purge of `stwmp-*.csv` older than 7 days. UI-verified.
 - **M8** ✅ (2026-10-30) Coupons from `discounts_export_N.csv` (`STWMP_Coupons`):
   Amount Off + Free Shipping; BXGY and automatic (code-less) discounts skipped
   and logged; scheduled/expired → draft; merchant's existing codes linked and
