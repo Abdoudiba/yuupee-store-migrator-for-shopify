@@ -316,6 +316,26 @@ Real fixtures (exported 2026-10-30, Basic plan): `tests/fixtures/` in the add-on
   / nginx snippet), blog posts + pages.
 - **M10 / v1.2** incremental mode.
 
+## 6b. Go-live checklist (state 2026-10-30)
+
+Code complete: free core **1.2.0** committed on main (b23925a + fac4e7d, NOT yet
+on SVN); add-on **1.0.0** committed (d86c3f7), zip `dist/…-1.0.0.zip` (66 KB,
+built by `bin/build.sh` from a clean tree). Blocked on Lemon Squeezy activation.
+
+1. **Abdou:** Lemon Squeezy → "Activate your store" (identity + US bank). Public
+   storefront/checkout return 403/404 until then.
+2. Copy product 1485829 to **live mode** (new product/variant IDs + checkout
+   link) → update `STWMP_LS_PRODUCT_ID` (store 510726 stays) → rebuild zip.
+3. Upload the zip to each of the 3 live variants (Files). Browser upload =
+   base64 DataTransfer recipe (openclaw playbook).
+4. Polish the LS product page (screenshots from Playground `shots/`).
+5. Publish free **1.2.0** to WP.org (SVN trunk + tags/1.2.0, git tag v1.2.0) —
+   the wizard's "Premium" tab links to `https://yuupee.lemonsqueezy.com/`.
+6. Tag add-on v1.0.0. Decide on test-mode keys in production (reject
+   `test_mode:true` keys once live).
+7. Later (v1.1): auto-updates (no update server exists — test.yuupee.com has no
+   DNS); until then buyers download new versions from their LS order page.
+
 ## 7. Distribution / release
 
 - Add-on zip built by `bin/build.sh` (strips `.git`, `vendor` dev deps, tests),
