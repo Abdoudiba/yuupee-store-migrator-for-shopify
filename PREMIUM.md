@@ -291,8 +291,8 @@ Real fixtures (exported 2026-10-30, Basic plan): `tests/fixtures/` in the add-on
   `customers_export.csv` + wizard step « Données premium » (3 uploads, API boxes
   only if a token is configured, bad file refused in place, CSV counts on
   Analyze). Playground-verified through the real UI with the real exports.
-  To do before v1.0: ~~daily CSV purge~~ (done); **add-on strings are French
-  source — switch to English source + fr_FR .po** (buyers are mostly English).
+  ~~Daily CSV purge~~ and ~~English source strings + fr_FR .po/.mo~~ — both
+  done 2026-10-30 (premium i18n commit; logs in English like the core).
 - **M7b** ✅ (2026-10-30) Orders from `orders_export_N.csv` (`STWMP_Orders`):
   verbatim money, SKU line matching (free line otherwise), §5 statuses, refund
   = exported amount, no emails / no stock moves / no coupon counts, customer by
