@@ -17,7 +17,7 @@ class STWM_Admin {
 	const CAP  = 'manage_woocommerce';
 
 	/** Page de vente de l'add-on premium (onglet « Premium »). */
-	const PREMIUM_URL = 'https://test.yuupee.com/store-migrator-premium';
+	const PREMIUM_URL = 'https://yuupee.lemonsqueezy.com/';
 
 	/**
 	 * Run id the upload_dir filter should target while wp_handle_upload() runs.
