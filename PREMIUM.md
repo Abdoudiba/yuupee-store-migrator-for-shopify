@@ -294,8 +294,12 @@ Real fixtures (exported 2026-10-30, Basic plan): `tests/fixtures/` in the add-on
   To do before v1.0: daily cron deleting `stwmp-*.csv` older than 7 days
   (abandoned runs keep PII files otherwise); **add-on strings are French
   source — switch to English source + fr_FR .po** (buyers are mostly English).
-- **M7b** Orders (the hard one — status map, money, line-item ID-map
-  resolution, refunds).
+- **M7b** ✅ (2026-10-30) Orders from `orders_export_N.csv` (`STWMP_Orders`):
+  verbatim money, SKU line matching (free line otherwise), §5 statuses, refund
+  = exported amount, no emails / no stock moves / no coupon counts, customer by
+  email after the customers phase, waits for products, idempotent. Verified in
+  Playground with the real export. Note: WC shows its "first order" llama modal
+  after the first imported order — harmless.
 - **Free-core gap found 2026-10-28:** `handle_rollback()` deletes ALL map rows
   for the run but only deletes products/variations/images → premium categories,
   customers and orders would be orphaned. Add `do_action( 'stwm_rollback_run',
