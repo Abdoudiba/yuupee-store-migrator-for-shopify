@@ -287,6 +287,13 @@ Real fixtures (exported 2026-10-30, Basic plan): `tests/fixtures/` in the add-on
   = updates, no duplicates). Rollback must select users by the
   `_stwmp_created_run` user meta, NOT by map rows (a re-run moves map rows to the
   newer run_id).
+- **M7a-CSV** ✅ (2026-10-30, premium 70d5757) `STWMP_CSV` + customers from
+  `customers_export.csv` + wizard step « Données premium » (3 uploads, API boxes
+  only if a token is configured, bad file refused in place, CSV counts on
+  Analyze). Playground-verified through the real UI with the real exports.
+  To do before v1.0: daily cron deleting `stwmp-*.csv` older than 7 days
+  (abandoned runs keep PII files otherwise); **add-on strings are French
+  source — switch to English source + fr_FR .po** (buyers are mostly English).
 - **M7b** Orders (the hard one — status map, money, line-item ID-map
   resolution, refunds).
 - **Free-core gap found 2026-10-28:** `handle_rollback()` deletes ALL map rows
